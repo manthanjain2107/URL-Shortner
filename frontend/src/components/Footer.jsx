@@ -3,7 +3,7 @@ function Footer() {
     <footer className="footer">
       <span>Created with</span>
       <img src="/heart.png" alt="Heart" />
-      <span>by Jeel Patel</span>
+      <span>by Manthan Jain</span>
     </footer>
   );
 }
