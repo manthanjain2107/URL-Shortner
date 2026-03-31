@@ -79,4 +79,27 @@ router.get("/urls", async (_req, res) => {
   }
 });
 
+router.delete("/urls", async (_req, res) => {
+  try {
+    await Url.deleteMany({});
+    res.json({ success: true, message: "Recent history cleared." });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || "Server error." });
+  }
+});
+
+router.delete("/urls/:id", async (req, res) => {
+  try {
+    const deletedUrl = await Url.findByIdAndDelete(req.params.id);
+
+    if (!deletedUrl) {
+      return res.status(404).json({ success: false, message: "Short URL not found." });
+    }
+
+    return res.json({ success: true, message: "Short URL deleted." });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message || "Server error." });
+  }
+});
+
 export default router;

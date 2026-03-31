@@ -11,6 +11,8 @@ function GeneratePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState("");
+  const [clearingHistory, setClearingHistory] = useState(false);
 
   async function fetchRecentUrls() {
     try {
@@ -62,6 +64,54 @@ function GeneratePage() {
     }
   }
 
+  async function handleDelete(id) {
+    setDeletingId(id);
+    setMessage("");
+    setError("");
+
+    try {
+      const response = await fetch(`${API_BASE}/urls/${id}`, {
+        method: "DELETE",
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Unable to delete short URL.");
+      }
+
+      setRecentUrls((currentUrls) => currentUrls.filter((item) => item._id !== id));
+      setMessage(result.message);
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setDeletingId("");
+    }
+  }
+
+  async function handleClearHistory() {
+    setClearingHistory(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const response = await fetch(`${API_BASE}/urls`, {
+        method: "DELETE",
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Unable to clear history.");
+      }
+
+      setRecentUrls([]);
+      setMessage(result.message);
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setClearingHistory(false);
+    }
+  }
+
   return (
     <main className="generator-layout">
       <section className="generator-card">
@@ -103,17 +153,37 @@ function GeneratePage() {
       </section>
 
       <section className="history-card">
-        <div className="card-header">
-          <p className="eyebrow">Recent links</p>
-          <h2>Saved in local MongoDB</h2>
+        <div className="card-header history-header">
+          <div>
+            <p className="eyebrow">Recent links</p>
+            <h2>Saved in local MongoDB</h2>
+          </div>
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={handleClearHistory}
+            disabled={recentUrls.length === 0 || clearingHistory}
+          >
+            {clearingHistory ? "Clearing..." : "Clear history"}
+          </button>
         </div>
         <div className="history-list">
           {recentUrls.length === 0 && <p className="empty-state">No URLs yet. Create your first one.</p>}
           {recentUrls.map((item) => (
             <article className="history-item" key={item._id}>
-              <a href={`${APP_BASE}/${item.shortCode}`} target="_blank" rel="noreferrer">
-                {APP_BASE}/{item.shortCode}
-              </a>
+              <div className="history-item-top">
+                <a href={`${APP_BASE}/${item.shortCode}`} target="_blank" rel="noreferrer">
+                  {APP_BASE}/{item.shortCode}
+                </a>
+                <button
+                  className="history-action"
+                  type="button"
+                  onClick={() => handleDelete(item._id)}
+                  disabled={deletingId === item._id || clearingHistory}
+                >
+                  {deletingId === item._id ? "Deleting..." : "Delete"}
+                </button>
+              </div>
               <p>{item.originalUrl}</p>
               <span>{item.clicks} clicks</span>
             </article>

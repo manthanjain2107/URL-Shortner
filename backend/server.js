@@ -17,6 +17,10 @@ app.use(cors({ origin: clientUrl }));
 app.use(express.json());
 app.use("/api", urlRoutes);
 
+app.get("/", (_req, res) => {
+  res.json({ success: true, message: "Backend is running" });
+});
+
 app.get("/:shortCode", async (req, res) => {
   try {
     const shortCode = req.params.shortCode?.toLowerCase();
